@@ -4,7 +4,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include "simple_shell.h"
 
 #define PROMPT "#cisfun$ "
 #define BUFFER_SIZE 1024
@@ -16,6 +15,19 @@ char *find_command_path(char *command);
 
 extern char **environ;
 
+#define PROMPT "#cisfun$ "
+
+/* Function to find the command path */
+char *find_command_path(char *command);
+
+/* Function to execute commands */
+void execute_command(char *command);
+
+/**
+ * main - Entry point of the shell program.
+ *
+ * Return: Always 0 (Success)
+ */
 int main(void)
 {
     char *line = NULL;
@@ -24,24 +36,24 @@ int main(void)
 
     while (1)
     {
-        /* Display the prompt */
+        /* Display prompt */
         write(STDOUT_FILENO, PROMPT, strlen(PROMPT));
 
-        /* Read a line from the user */
+        /* Read command line input */
         nread = getline(&line, &len, stdin);
 
-        /* Handle EOF (Ctrl+D) */
+        /* Handle end-of-file (Ctrl+D) */
         if (nread == -1)
         {
             write(STDOUT_FILENO, "\n", 1);
             break;
         }
 
-        /* Remove the newline character */
+        /* Remove newline character */
         if (line[nread - 1] == '\n')
             line[nread - 1] = '\0';
 
-        /* Ignore empty commands */
+        /* Ignore empty lines */
         if (line[0] == '\0')
             continue;
 
@@ -50,115 +62,63 @@ int main(void)
     }
 
     free(line);
-    return 0;
+    return (0);
 }
 
-void execute_command(char *line)
+/**
+ * execute_command - Executes a given command.
+ * @command: The command to execute.
+ */
+void execute_command(char *command)
 {
     pid_t pid;
     int status;
-    char **argv = parse_command(line);
-    char *command_path;
+    char *argv[2];
+    char *path;
 
-    if (argv == NULL)
-        return;
+    /* Set up arguments for execve */
+    argv[0] = command;
+    argv[1] = NULL;
 
-    /* Handle built-in "exit" command */
-    if (strcmp(argv[0], "exit") == 0)
+    /* Find the command path */
+    path = find_command_path(command);
+
+    if (path == NULL || access(path, X_OK) == -1)
     {
-        free(argv);
-        free(line);
-        exit(0);
+    fprintf(stderr, "./shell: %s: command not found\n", command);
+    return;
     }
 
-    /* Handle built-in "env" command */
-    if (strcmp(argv[0], "env") == 0)
-    {
-        for (char **env = environ; *env != NULL; env++)
-        {
-            write(STDOUT_FILENO, *env, strlen(*env));
-            write(STDOUT_FILENO, "\n", 1);
-        }
-        free(argv);
-        return;
-    }
-
-    /* Find the full path of the command */
-    command_path = find_command_path(argv[0]);
-
-    if (command_path == NULL)
-    {
-        fprintf(stderr, "./shell: %s: command not found\n", argv[0]);
-        free(argv);
-        return;
-    }
-
+    /* Create a new process */
     pid = fork();
     if (pid == -1)
     {
         perror("fork");
-        free(argv);
-        free(command_path);
         exit(EXIT_FAILURE);
     }
 
     if (pid == 0)
     {
-        /* Child process */
-        if (execve(command_path, argv, environ) == -1)
+        /* Child process: execute the command */
+        if (execve(path, argv, environ) == -1)
         {
-            perror("./shell");
-            free(argv);
-            free(command_path);
+            perror("execve");
             exit(EXIT_FAILURE);
         }
     }
     else
     {
-        /* Parent process */
+        /* Parent process: wait for child to finish */
         wait(&status);
     }
-
-    free(argv);
-    free(command_path);
 }
 
-char **parse_command(char *line)
-{
-    char **argv = NULL;
-    char *token;
-    size_t argc = 0;
-    size_t capacity = 10;
-
-    argv = malloc(sizeof(char *) * capacity);
-    if (argv == NULL)
-    {
-        perror("malloc");
-        return NULL;
-    }
-
-    token = strtok(line, " ");
-    while (token != NULL)
-    {
-        if (argc >= capacity)
-        {
-            capacity *= 2;
-            argv = realloc(argv, sizeof(char *) * capacity);
-            if (argv == NULL)
-            {
-                perror("realloc");
-                return NULL;
-            }
-        }
-
-        argv[argc++] = token;
-        token = strtok(NULL, " ");
-    }
-
-    argv[argc] = NULL;
-    return argv;
-}
-
+/**
+ * find_command_path - Finds the full path of a command.
+ * @command: The command to locate.
+ *
+ * Return: The full path of the command or NULL if not found.
+ */
 char *find_command_path(char *command)
 {
     char *path = getenv("PATH");
@@ -166,13 +126,13 @@ char *find_command_path(char *command)
     size_t command_len, dir_len;
 
     if (path == NULL)
-        return NULL;
+        return (NULL);
 
     path_copy = strdup(path);
     if (path_copy == NULL)
     {
         perror("strdup");
-        return NULL;
+        return (NULL);
     }
 
     command_len = strlen(command);
@@ -186,7 +146,7 @@ char *find_command_path(char *command)
         {
             perror("malloc");
             free(path_copy);
-            return NULL;
+            return (NULL);
         }
 
         sprintf(full_path, "%s/%s", dir, command);
@@ -194,7 +154,7 @@ char *find_command_path(char *command)
         if (access(full_path, X_OK) == 0)
         {
             free(path_copy);
-            return full_path;
+            return (full_path);
         }
 
         free(full_path);
@@ -202,5 +162,5 @@ char *find_command_path(char *command)
     }
 
     free(path_copy);
-    return NULL;
+    return (NULL);
 }
