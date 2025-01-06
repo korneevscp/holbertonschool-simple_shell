@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include "simple_shell.h"
 
 #define PROMPT "#cisfun$ "
 #define BUFFER_SIZE 1024
