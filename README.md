@@ -2,3 +2,4 @@
 
 
 to launch the terminal: ./hsh
+I used Ubuntu 22.0 with VI editor 
