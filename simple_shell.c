@@ -13,6 +13,8 @@ void execute_command(char *line);
 char **parse_command(char *line);
 char *find_command_path(char *command);
 
+extern char **environ;
+
 int main(void)
 {
     char *line = NULL;
@@ -59,6 +61,26 @@ void execute_command(char *line)
 
     if (argv == NULL)
         return;
+
+    /* Handle built-in "exit" command */
+    if (strcmp(argv[0], "exit") == 0)
+    {
+        free(argv);
+        free(line);
+        exit(0);
+    }
+
+    /* Handle built-in "env" command */
+    if (strcmp(argv[0], "env") == 0)
+    {
+        for (char **env = environ; *env != NULL; env++)
+        {
+            write(STDOUT_FILENO, *env, strlen(*env));
+            write(STDOUT_FILENO, "\n", 1);
+        }
+        free(argv);
+        return;
+    }
 
     /* Find the full path of the command */
     command_path = find_command_path(argv[0]);
