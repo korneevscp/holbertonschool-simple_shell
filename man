@@ -1,0 +1,141 @@
+man review 
+
+
+---
+
+# SHELL(1)  
+## NAME  
+**shell** - A simple command-line interpreter for executing commands and handling pipes.
+
+---
+
+## SYNOPSIS  
+```bash
+shell
+```
+
+---
+
+## DESCRIPTION  
+This program implements a minimal shell with the following features:  
+- Execution of simple commands.  
+- Handling of pipes (`|`) between two commands.  
+- Support for built-in commands like **echo**.  
+- Searching for commands in directories defined by the **PATH** environment variable.  
+- Exiting the shell using the `exit` command.  
+
+---
+
+## OPTIONS  
+This shell does not support any additional options.
+
+---
+
+## COMMANDS  
+### 1. Simple Commands  
+You can execute a command by typing its name followed by its arguments, just like in a standard shell.  
+Example:  
+```bash
+ls -l
+```
+
+### 2. Commands with Pipes  
+This shell supports basic pipes (`|`) to connect the output of one command to the input of another.  
+Example:  
+```bash
+ls | grep shell
+```
+
+### 3. Built-in Commands  
+#### **echo**  
+Prints the given arguments to the standard output.  
+Example:  
+```bash
+echo Hello, World!
+```
+
+#### **exit**  
+Terminates the shell program.  
+Example:  
+```bash
+exit
+```
+
+---
+
+## FUNCTIONALITY  
+1. **Prompt**  
+   The shell displays a prompt (`#cisfun$ `) to indicate readiness for a command.  
+
+2. **Input Handling**  
+   - Accepts input from the user via `getline()`.  
+   - Strips the newline character and handles empty inputs gracefully.  
+
+3. **Command Parsing**  
+   - Splits the input string into an array of arguments using spaces as delimiters.  
+
+4. **Command Execution**  
+   - If the command is a valid executable file, it is run directly using `execve()`.  
+   - Otherwise, the shell searches for the command in the directories specified by the **PATH** variable.  
+
+5. **Pipe Handling**  
+   - Splits commands connected by `|` and uses `pipe()` and `fork()` to set up communication between processes.  
+
+---
+
+## FILES  
+No specific files are required for this shell.
+
+---
+
+## ENVIRONMENT  
+- **PATH**: Defines the directories to search for executable files.  
+- **environ**: Used to pass environment variables to child processes.  
+
+---
+
+## EXIT STATUS  
+- Returns `0` upon successful execution or when the `exit` command is used.  
+- Non-zero exit codes indicate errors (e.g., failed system calls).  
+
+---
+
+## EXAMPLES  
+### Running a simple command  
+```bash
+#cisfun$ ls -l
+```
+
+### Using a pipe  
+```bash
+#cisfun$ ls | grep file
+
+```
+
+### Exiting the shell  
+```bash
+#cisfun$ exit
+```
+
+---
+
+## BUGS  
+- Currently, only single pipes (`|`) are supported.  
+- The shell does not handle advanced features like I/O redirection (`>` or `<`) or background processes (`&`).  
+- Memory leaks may occur if dynamic memory is not freed correctly in edge cases.  
+
+---
+
+## AUTHOR  
+Written by Nils 
+Georges
+Valentin   
+
+--- 
+
+## SEE ALSO  
+**sh(1)**, **bash(1)**, **execve(2)**, **fork(2)**, **pipe(2)**.  
+
+--- 
+
+
